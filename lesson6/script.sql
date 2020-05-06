@@ -264,7 +264,7 @@ SELECT id FROM (
 	SELECT id, COUNT(*) as total FROM (
 		-- ничего не пишут
 		SELECT id FROM users WHERE id NOT IN (SELECT from_user_id FROM messages)
-		UNION
+		UNION ALL
 		-- ничего не постят
 		SELECT id FROM users WHERE id NOT IN (SELECT user_id FROM posts)
 	) non_active_users_info
@@ -274,19 +274,14 @@ SELECT id FROM (
 UNION
 -- добавляем минимально активных
 SELECT id FROM (
-	-- activity = сообщения + посты на пользователя
-	SELECT id, total, SUM(total) AS activity FROM (
+	SELECT id, COUNT(*) AS total FROM (
 		-- группируем по пользователям сообщения и считаем их кол-во
-		SELECT from_user_id AS id, COUNT(*) AS total
-			FROM messages
-			GROUP BY from_user_id
-		UNION
+		SELECT from_user_id AS id FROM messages
+		UNION ALL
 		-- группируем по пользователям посты и считаем их кол-во
-		SELECT user_id AS id, COUNT(*) AS total
-			FROM posts
-			GROUP BY user_id
+		SELECT user_id AS id FROM posts
 	) min_active_users_info
 	GROUP BY id
-	ORDER BY activity
+	ORDER BY total
 ) min_active_users
 LIMIT 10;
